@@ -1,6 +1,5 @@
 import torch
-import utils
-import transformer
+from utils import transformer, utils
 import os
 from torchvision import transforms
 import cv2
