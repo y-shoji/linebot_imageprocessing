@@ -14,6 +14,8 @@ from linebot.models import (
 )
 from utils.image_processing import *
 
+from utils.aws_api import *
+
 from utils.stylize_api import stylize_api
 ghoul_api = stylize_api(mode="tokyo_ghoul")
 
@@ -77,9 +79,17 @@ def cross_hatching(reply_token):
     cv2.imwrite(str(main_image_path),img2)
     cv2.imwrite(str(preview_image_path),pre_img)
 
+    aws_save_image(str(main_image_path))
+    aws_save_image(str(preview_image_path))
+
+    # image_message = ImageSendMessage(
+    #     original_content_url=f"https://799cc32b.ngrok.io/{main_image_path}",   #直前の画像
+    #     preview_image_url=f"https://799cc32b.ngrok.io/{preview_image_path}",
+    # )
+
     image_message = ImageSendMessage(
-        original_content_url=f"https://799cc32b.ngrok.io/{main_image_path}",   #直前の画像
-        preview_image_url=f"https://799cc32b.ngrok.io/{preview_image_path}",
+        original_content_url=aws_get_url(str(main_image_path)),   #直前の画像
+        preview_image_url=aws_get_url(str(preview_image_path)),
     )
 
     line_bot_api.reply_message(reply_token, image_message)
