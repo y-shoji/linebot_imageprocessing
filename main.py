@@ -14,6 +14,9 @@ from linebot.models import (
 )
 from utils.image_processing import *
 
+from utils.stylize_api import stylize_api
+ghoul_api = stylize_api(mode="tokyo_ghoul")
+
 app = Flask(__name__)
 
 #環境変数取得
@@ -75,8 +78,40 @@ def cross_hatching(reply_token):
     cv2.imwrite(str(preview_image_path),pre_img)
 
     image_message = ImageSendMessage(
-        original_content_url=f"https://2b0bcad0.ngrok.io/{main_image_path}",   #直前の画像
-        preview_image_url=f"https://2b0bcad0.ngrok.io/{preview_image_path}",
+        original_content_url=f"https://799cc32b.ngrok.io/{main_image_path}",   #直前の画像
+        preview_image_url=f"https://799cc32b.ngrok.io/{preview_image_path}",
+    )
+
+    line_bot_api.reply_message(reply_token, image_message)
+
+    src_image_path.unlink()
+
+def ghoul_processing(reply_token):
+    global message_id
+    src_image_path = Path(SRC_IMAGE_PATH.format(message_id)).absolute()
+    main_image_path = MAIN_IMAGE_PATH.format(message_id)
+    preview_image_path = PREVIEW_IMAGE_PATH.format(message_id)
+
+    img = cv2.imread(str(src_image_path))
+
+    img2 = ghoul_api.stylzie(img)
+
+    max_size = 224
+    h,w =img2.shape[:2]
+
+    if w <= h and h > max_size:
+        proportion = h/max_size
+        pre_img = cv2.resize(img2, (int(w*proportion)-1, int(h*proportion)-1))
+    elif w > h and w > max_size:
+        proportion = w/max_size
+        pre_img = cv2.resize(img2, (int(w*proportion)-1, int(h*proportion)-1))
+
+    cv2.imwrite(str(main_image_path),img2)
+    cv2.imwrite(str(preview_image_path),pre_img)
+
+    image_message = ImageSendMessage(
+        original_content_url=f"https://799cc32b.ngrok.io/{main_image_path}",   #直前の画像
+        preview_image_url=f"https://799cc32b.ngrok.io/{preview_image_path}",
     )
 
     line_bot_api.reply_message(reply_token, image_message)
@@ -109,7 +144,8 @@ def handle_message(event):
     if message == "text1":
         cross_hatching(event.reply_token)
     elif message == "text2":
-        cross_hatching(event.reply_token)
+        # cross_hatching(event.reply_token)
+        ghoul_processing(event.reply_token)
     else:
         line_bot_api.reply_message(
             event.reply_token,
