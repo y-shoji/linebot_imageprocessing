@@ -37,17 +37,17 @@ def save_image(message_id: str, save_path: str) -> None:
 
 def make_button_template():
     message_template = TemplateSendMessage(
-        alt_text="https://rinebot114514.herokuapp.com/static/images/{save_path}.jpg",
+        # alt_text="https://rinebot114514.herokuapp.com/static/images/{save_path}.jpg",
         template=ButtonsTemplate(
             text="どの変換にする？",
             title="選択してください",
             actions=[
                 URIAction(
-                    uri="https://rinebot114514.herokuapp.com/static/images/{save_path}.jpg",
+                    # uri="https://rinebot114514.herokuapp.com/static/images/{save_path}.jpg",
                     label="A"
                 ),
                 URIAction(
-                    url="https://rinebot114514.herokuapp.com/static/images/{save_path}.jpg",
+                    # url="https://rinebot114514.herokuapp.com/static/images/{save_path}.jpg",
                     label="B"
                 )
             ]
