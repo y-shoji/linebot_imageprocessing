@@ -10,7 +10,7 @@ from linebot.models import (
     MessageEvent, TextMessage, ImageMessage, TextSendMessage, ImageSendMessage, 
     VideoSendMessage, StickerSendMessage, AudioSendMessage
 )
-from image_processing import *
+from utils.image_processing import *
 
 app = Flask(__name__)
 

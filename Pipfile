@@ -10,6 +10,9 @@ flask = "*"
 line-bot-sdk = "*"
 opencv-python = "*"
 numpy = "*"
+torch = "*"
+torchvision = "*"
+matplotlib = "*"
 
 [requires]
 python_version = "3.7"
