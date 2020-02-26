@@ -27,7 +27,7 @@ def hatching(img,LIY):
     hatching_45deg_img = hatching_45deg_img.astype(np.uint8)
 
     hatching_135deg_img = cv2.filter2D(noise_img,-1,kernel_135deg)
-    hatching_135deg_img = hatching_135deg_img[l:l+hight, l:l+width] // (2*l+1)
+    hatching_135deg_img = hatching_135deg_img[l:l+height, l:l+width] // (2*l+1)
     hatching_135deg_img = hatching_135deg_img.astype(np.uint8)
  
     return hatching_45deg_img, hatching_135deg_img
