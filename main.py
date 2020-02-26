@@ -1,6 +1,7 @@
 # coding: UTF-8
 
 import os
+import sys
 import random
 import cv2
 
@@ -33,6 +34,7 @@ SRC_IMAGE_PATH = "static/images/src/{}.jpg"
 MAIN_IMAGE_PATH = "static/images/{}/{}_main.jpg"
 PREVIEW_IMAGE_PATH = "static/images/{}/{}_preview.jpg"
 message_id = ""
+args = sys.argv
 
 def save_image(message_id, save_path):
     message_content = line_bot_api.get_message_content(message_id)
@@ -109,18 +111,19 @@ def image_converter(reply_token, mode):
     cv2.imwrite(str(main_image_path),img2)
     cv2.imwrite(str(preview_image_path),pre_img)
 
-    image_message = ImageSendMessage(
-        original_content_url=f"https://ad8e83cc.ngrok.io/{main_image_path}",
-        preview_image_url=f"https://ad8e83cc.ngrok.io/{preview_image_path}",
-    )
+    if len(args) > 1:
+        image_message = ImageSendMessage(
+            original_content_url=f"{args[1]}/{main_image_path}",
+            preview_image_url=f"{args[1]}/{preview_image_path}",
+        )
+    else:
+        aws_save_image(str(main_image_path))
+        aws_save_image(str(preview_image_path))
 
-    # aws_save_image(str(main_image_path))
-    # aws_save_image(str(preview_image_path))
-
-    # image_message = ImageSendMessage(
-    #     original_content_url=aws_get_url(str(main_image_path)),
-    #     preview_image_url=aws_get_url(str(preview_image_path)),
-    # )
+        image_message = ImageSendMessage(
+            original_content_url=aws_get_url(str(main_image_path)),
+            preview_image_url=aws_get_url(str(preview_image_path)),
+        )
 
     line_bot_api.reply_message(reply_token, [image_message, make_button()])
 
