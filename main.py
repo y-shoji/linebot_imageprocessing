@@ -11,6 +11,10 @@ from linebot.models import (
     VideoSendMessage, StickerSendMessage, AudioSendMessage
 )
 from utils.image_processing import *
+from linebot.models import (
+    MessageEvent, TextMessage, TextSendMessage, 
+    TemplateSendMessage,ButtonsTemplate,URIAction 
+)
 
 app = Flask(__name__)
 
@@ -30,6 +34,35 @@ def save_image(message_id: str, save_path: str) -> None:
     with open(save_path, "wb") as f:
         for chunk in message_content.iter_content():
             f.write(chunk)
+
+def make_button_template():
+    message_template = TemplateSendMessage(
+        alt_text="https://rinebot114514.herokuapp.com/static/images/{save_path}.jpg",
+        template=ButtonsTemplate(
+            text="A",
+            title="A",
+            actions=[
+                URIAction(
+                    uri="https://rinebot114514.herokuapp.com/static/images/{save_path}.jpg",
+                    label="URIアクションのLABEL"
+                )
+            ]
+        )
+    )
+    message_template = TemplateSendMessage(
+        alt_text="https://rinebot114514.herokuapp.com/static/images/{save_path}.jpg",
+        template=ButtonsTemplate(
+            text="B",
+            title="B",
+            actions=[
+                URIAction(
+                    uri="https://rinebot114514.herokuapp.com/static/images/{save_path}.jpg",
+                    label="URIアクションのLABEL"
+                )
+            ]
+        )
+    )
+    return message_template
 
 @app.route("/callback", methods=['POST'])
 def callback():
@@ -66,7 +99,7 @@ def handle_image(event):
     save_image(message_id, src_image_path)
 
     img = cv2.imread(str(src_image_path),0)
-    
+
     hatching45_img, hatching135_img = hatching(img, LIY=30)
     img2 = BD(hatching45_img, hatching135_img)
     
