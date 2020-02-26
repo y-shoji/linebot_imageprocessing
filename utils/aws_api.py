@@ -1,11 +1,9 @@
 import os
 import boto3
 
-"""
 aws_s3_bucket        = os.environ['AWS_BUCKET']
 aws_s3_accesskey     = os.environ['AWS_ACCESS_KEY_ID']
 aws_s3_secretkey     = os.environ['AWS_SECRET_ACCESS_KEY']
-"""
 
 def aws_save_image(file_name):
     s3_resource = boto3.resource('s3')
