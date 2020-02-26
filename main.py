@@ -39,14 +39,14 @@ def save_image(message_id, save_path):
 
 def make_button():
     message_template = TextSendMessage(
-            text='select',
+            text='変換方法を選んでください',
             quick_reply=QuickReply(
                 items=[
                     QuickReplyButton(
-                        action=MessageAction(label="A", text="text1")
+                        action=MessageAction(label="クロスハッチング", text="クロスハッチング")
                     ),
                     QuickReplyButton(
-                        action=MessageAction(label="B", text="text2")
+                        action=MessageAction(label="東京喰種風", text="東京喰種風")
                     )
                 ]
             )
@@ -141,9 +141,9 @@ def handle_message(event):
     # line_bot_api.reply_message(
     #     event.reply_token,
     #     TextSendMessage(text=message))
-    if message == "text1":
+    if message == "クロスハッチング":
         cross_hatching(event.reply_token)
-    elif message == "text2":
+    elif message == "東京喰種風":
         # cross_hatching(event.reply_token)
         ghoul_processing(event.reply_token)
     else:
