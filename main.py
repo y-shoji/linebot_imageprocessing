@@ -39,25 +39,16 @@ def make_button_template():
     message_template = TemplateSendMessage(
         alt_text="https://rinebot114514.herokuapp.com/static/images/{save_path}.jpg",
         template=ButtonsTemplate(
-            text="A",
-            title="A",
+            text="どの変換にする？",
+            title="選択してください",
             actions=[
                 URIAction(
                     uri="https://rinebot114514.herokuapp.com/static/images/{save_path}.jpg",
-                    label="URIアクションのLABEL"
-                )
-            ]
-        )
-    )
-    message_template = TemplateSendMessage(
-        alt_text="https://rinebot114514.herokuapp.com/static/images/{save_path}.jpg",
-        template=ButtonsTemplate(
-            text="B",
-            title="B",
-            actions=[
+                    label="A"
+                ),
                 URIAction(
-                    uri="https://rinebot114514.herokuapp.com/static/images/{save_path}.jpg",
-                    label="URIアクションのLABEL"
+                    url="https://rinebot114514.herokuapp.com/static/images/{save_path}.jpg",
+                    label="B"
                 )
             ]
         )
@@ -126,7 +117,7 @@ def handle_image(event):
         preview_image_url=f"https://rinebot114514.herokuapp.com/{preview_image_path}",
     )
 
-    line_bot_api.reply_message(event.reply_token, image_message)
+    line_bot_api.reply_message(event.reply_token, [make_button_template, image_message])
 
     src_image_path.unlink()
 if __name__ == "__main__":
