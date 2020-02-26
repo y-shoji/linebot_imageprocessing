@@ -11,6 +11,10 @@ from linebot.models import (
     VideoSendMessage, StickerSendMessage, AudioSendMessage
 )
 from utils.image_processing import *
+from linebot.models import (
+    MessageEvent, TextMessage, TextSendMessage, 
+    TemplateSendMessage,ButtonsTemplate,URIAction 
+)
 
 app = Flask(__name__)
 
@@ -31,6 +35,19 @@ def save_image(message_id: str, save_path: str) -> None:
         for chunk in message_content.iter_content():
             f.write(chunk)
 
+def make_button_template():
+    message_template = TemplateSendMessage(
+        template=ButtonsTemplate(
+            title="選択してください",
+            text="どの変換にする？",
+            actions=[
+                PostbackAction(label='A', data='AAA'),
+                PostbackAction(label='B', data='BBB'),
+            ]
+        )
+    )
+    return message_template
+
 @app.route("/callback", methods=['POST'])
 def callback():
     # get X-Line-Signature header value
@@ -47,7 +64,6 @@ def callback():
         abort(400)
 
     return 'OK'
-
 
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
@@ -66,7 +82,7 @@ def handle_image(event):
     save_image(message_id, src_image_path)
 
     img = cv2.imread(str(src_image_path),0)
-    
+
     hatching45_img, hatching135_img = hatching(img, LIY=30)
     img2 = BD(hatching45_img, hatching135_img)
     
@@ -93,7 +109,7 @@ def handle_image(event):
         preview_image_url=f"https://rinebot114514.herokuapp.com/{preview_image_path}",
     )
 
-    line_bot_api.reply_message(event.reply_token, image_message)
+    line_bot_api.reply_message(event.reply_token, [make_button_template(), image_message])
 
     src_image_path.unlink()
 if __name__ == "__main__":
