@@ -55,48 +55,26 @@ def make_button():
     )
     return message_template
 
-def cross_hatching(reply_token):
-    global message_id
-    src_image_path = Path(SRC_IMAGE_PATH.format(message_id)).absolute()
-    main_image_path = MAIN_IMAGE_PATH.format(message_id)
-    preview_image_path = PREVIEW_IMAGE_PATH.format(message_id)
+def resize(img, max_size):
 
-    img = cv2.imread(str(src_image_path),0)
-
-    hatching45_img, hatching135_img = hatching(img, LIY=30)
-    img2 = BD(hatching45_img, hatching135_img)
-            
-    max_size = 224
-    h,w =img2.shape[:2]
+    h, w = img.shape[:2]
 
     if w <= h and h > max_size:
-        proportion = h/max_size
-        pre_img = cv2.resize(img2, (int(w*proportion)-1, int(h*proportion)-1))
+        proportion = max_size/h
     elif w > h and w > max_size:
-        proportion = w/max_size
-        pre_img = cv2.resize(img2, (int(w*proportion)-1, int(h*proportion)-1))
+        proportion = max_size/w
+    else:
+        proportion = 1
+        
+    img = cv2.resize(img, (int(w*proportion), int(h*proportion)))
+    
+    return img
 
-    cv2.imwrite(str(main_image_path),img2)
-    cv2.imwrite(str(preview_image_path),pre_img)
-
-    aws_save_image(str(main_image_path))
-    aws_save_image(str(preview_image_path))
-
-    # image_message = ImageSendMessage(
-    #     original_content_url=f"https://799cc32b.ngrok.io/{main_image_path}",   #直前の画像
-    #     preview_image_url=f"https://799cc32b.ngrok.io/{preview_image_path}",
-    # )
-
-    image_message = ImageSendMessage(
-        original_content_url=aws_get_url(str(main_image_path)),   #直前の画像
-        preview_image_url=aws_get_url(str(preview_image_path)),
-    )
-
-    line_bot_api.reply_message(reply_token, image_message)
-
-    src_image_path.unlink()
-
-def ghoul_processing(reply_token):
+def image_converter(reply_token, mode=0):
+    """
+    0: cross_hatching
+    1: tokyo_ghoul
+    """
     global message_id
     src_image_path = Path(SRC_IMAGE_PATH.format(message_id)).absolute()
     main_image_path = MAIN_IMAGE_PATH.format(message_id)
@@ -104,24 +82,33 @@ def ghoul_processing(reply_token):
 
     img = cv2.imread(str(src_image_path))
 
-    img2 = ghoul_api.stylzie(img)
+    print(img.shape)
+    img = resize(img=img, max_size=1024)
+    print(img.shape)
 
-    max_size = 224
-    h,w =img2.shape[:2]
+    if mode == 0:
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        hatching45_img, hatching135_img = hatching(img, LIY=30)
+        img2 = BD(hatching45_img, hatching135_img)
+    elif mode == 1:
+        img2 = ghoul_api.stylzie(img)
 
-    if w <= h and h > max_size:
-        proportion = h/max_size
-        pre_img = cv2.resize(img2, (int(w*proportion)-1, int(h*proportion)-1))
-    elif w > h and w > max_size:
-        proportion = w/max_size
-        pre_img = cv2.resize(img2, (int(w*proportion)-1, int(h*proportion)-1))
+    pre_img = resize(img=img2, max_size=224)
 
     cv2.imwrite(str(main_image_path),img2)
     cv2.imwrite(str(preview_image_path),pre_img)
 
+    # image_message = ImageSendMessage(
+    #     original_content_url=f"https://ad8e83cc.ngrok.io/{main_image_path}",
+    #     preview_image_url=f"https://ad8e83cc.ngrok.io/{preview_image_path}",
+    # )
+
+    aws_save_image(str(main_image_path))
+    aws_save_image(str(preview_image_path))
+
     image_message = ImageSendMessage(
-        original_content_url=f"https://799cc32b.ngrok.io/{main_image_path}",   #直前の画像
-        preview_image_url=f"https://799cc32b.ngrok.io/{preview_image_path}",
+        original_content_url=aws_get_url(str(main_image_path)),
+        preview_image_url=aws_get_url(str(preview_image_path)),
     )
 
     line_bot_api.reply_message(reply_token, image_message)
@@ -148,32 +135,24 @@ def callback():
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
     message = event.message.text
-    # line_bot_api.reply_message(
-    #     event.reply_token,
-    #     TextSendMessage(text=message))
     if message == "クロスハッチング":
-        cross_hatching(event.reply_token)
+        image_converter(event.reply_token, 0)
     elif message == "東京喰種風":
-        # cross_hatching(event.reply_token)
-        ghoul_processing(event.reply_token)
+        image_converter(event.reply_token, 1)
     else:
         line_bot_api.reply_message(
             event.reply_token,
             TextSendMessage(text=f"{message}の処理が出来ませんでした。")
         )
 
-
-
 @handler.add(MessageEvent, message=ImageMessage)
 def handle_image(event):
     global message_id
     message_id = event.message.id
     src_image_path = Path(SRC_IMAGE_PATH.format(message_id)).absolute()
-    
-    
+        
     save_image(message_id, src_image_path)
     line_bot_api.reply_message(event.reply_token, make_button())
-
 
 if __name__ == "__main__":
 #    app.run()
