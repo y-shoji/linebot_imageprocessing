@@ -37,19 +37,12 @@ def save_image(message_id: str, save_path: str) -> None:
 
 def make_button_template():
     message_template = TemplateSendMessage(
-        # alt_text="https://rinebot114514.herokuapp.com/static/images/{save_path}.jpg",
         template=ButtonsTemplate(
-            text="どの変換にする？",
             title="選択してください",
+            text="どの変換にする？",
             actions=[
-                URIAction(
-                    # uri="https://rinebot114514.herokuapp.com/static/images/{save_path}.jpg",
-                    label="A"
-                ),
-                URIAction(
-                    # url="https://rinebot114514.herokuapp.com/static/images/{save_path}.jpg",
-                    label="B"
-                )
+                PostbackAction(label='A', data='AAA'),
+                PostbackAction(label='B', data='BBB'),
             ]
         )
     )
@@ -71,7 +64,6 @@ def callback():
         abort(400)
 
     return 'OK'
-
 
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
@@ -117,7 +109,7 @@ def handle_image(event):
         preview_image_url=f"https://rinebot114514.herokuapp.com/{preview_image_path}",
     )
 
-    line_bot_api.reply_message(event.reply_token, [make_button_template, image_message])
+    line_bot_api.reply_message(event.reply_token, [make_button_template(), image_message])
 
     src_image_path.unlink()
 if __name__ == "__main__":
