@@ -23,11 +23,11 @@ def hatching(img,LIY):
     kernel_45deg  = np.fliplr(kernel_135deg)
 
     hatching_45deg_img = cv2.filter2D(noise_img,-1,kernel_45deg)
-    hatching_45deg_img = hatching_45deg_img[l:l+width,l:l+height] // (2*l+1)
+    hatching_45deg_img = hatching_45deg_img[l:l+height, l:l+width] // (2*l+1)
     hatching_45deg_img = hatching_45deg_img.astype(np.uint8)
 
     hatching_135deg_img = cv2.filter2D(noise_img,-1,kernel_135deg)
-    hatching_135deg_img = hatching_135deg_img[l:l+width,l:l+height] // (2*l+1)
+    hatching_135deg_img = hatching_135deg_img[l:l+height, l:l+width] // (2*l+1)
     hatching_135deg_img = hatching_135deg_img.astype(np.uint8)
  
     return hatching_45deg_img, hatching_135deg_img
