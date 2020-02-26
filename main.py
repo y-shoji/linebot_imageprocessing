@@ -1,3 +1,5 @@
+# coding: UTF-8
+
 import os
 import random
 import cv2
@@ -8,10 +10,9 @@ from linebot import LineBotApi, WebhookHandler
 from linebot.exceptions import InvalidSignatureError
 from linebot.models import (
     MessageEvent, TextMessage, ImageMessage, TextSendMessage, ImageSendMessage, 
-    VideoSendMessage, StickerSendMessage, AudioSendMessage, QuickReply, QuickReplyButton
+    VideoSendMessage, StickerSendMessage, AudioSendMessage, QuickReply, QuickReplyButton, MessageAction
 )
 from utils.image_processing import *
-)
 
 app = Flask(__name__)
 
@@ -26,7 +27,7 @@ SRC_IMAGE_PATH = "static/images/{}.jpg"
 MAIN_IMAGE_PATH = "static/images/{}_main.jpg"
 PREVIEW_IMAGE_PATH = "static/images/{}_preview.jpg"
 
-def save_image(message_id: str, save_path: str) -> None:
+def save_image(message_id, save_path):
     message_content = line_bot_api.get_message_content(message_id)
     with open(save_path, "wb") as f:
         for chunk in message_content.iter_content():
@@ -34,7 +35,7 @@ def save_image(message_id: str, save_path: str) -> None:
 
 def make_button():
     message_template = TextSendMessage(
-            text='選択してください',
+            text='select',
             quick_reply=QuickReply(
                 items=[
                     QuickReplyButton(
@@ -43,6 +44,8 @@ def make_button():
                     QuickReplyButton(
                         action=MessageAction(label="B", text="text2")
                     )
+                ]
+            )
     )
     return message_template
 
@@ -94,17 +97,17 @@ def handle_image(event):
         proportion = w/max_size
         pre_img = cv2.resize(img2, (int(w*proportion)-1, int(h*proportion)-1))
     
-    app.logger.info(img2.shape,pre_img.shape)
+    # app.logger.info(img2.shape,pre_img.shape)
 
     cv2.imwrite(str(main_image_path),img2)
     cv2.imwrite(str(preview_image_path),pre_img)
 
-    app.logger.info(os.path.isfile(f"https://date-the-image.herokuapp.com/{main_image_path}"))
-    app.logger.info(os.path.isfile(f"https://date-the-image.herokuapp.com/{preview_image_path}"))
+    # app.logger.info(os.path.isfile(f"https://date-the-image.herokuapp.com/{main_image_path}"))
+    # app.logger.info(os.path.isfile(f"https://date-the-image.herokuapp.com/{preview_image_path}"))
 
     image_message = ImageSendMessage(
-        original_content_url=f"https://   /{main_image_path}",
-        preview_image_url=f"https://   /{preview_image_path}",
+        original_content_url=f"https://2b0bcad0.ngrok.io/{main_image_path}",
+        preview_image_url=f"https://2b0bcad0.ngrok.io/{preview_image_path}",
     )
 
     line_bot_api.reply_message(event.reply_token, make_button())
