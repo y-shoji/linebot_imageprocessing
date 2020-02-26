@@ -18,6 +18,7 @@ from utils.aws_api import *
 
 from utils.stylize_api import stylize_api
 ghoul_api = stylize_api(mode="tokyo_ghoul")
+mosaic_api = stylize_api(mode="mosaic")
 
 app = Flask(__name__)
 
@@ -49,7 +50,13 @@ def make_button():
                     ),
                     QuickReplyButton(
                         action=MessageAction(label="東京喰種風", text="東京喰種風")
-                    )
+                    ),
+                    QuickReplyButton(
+                        action=MessageAction(label="ステンドグラス風", text="ステンドグラス風")
+                    ),
+                    QuickReplyButton(
+                        action=MessageAction(label="ポスター風", text="ポスター風")
+                    ),
                 ]
             )
     )
@@ -92,6 +99,10 @@ def image_converter(reply_token, mode=0):
         img2 = BD(hatching45_img, hatching135_img)
     elif mode == 1:
         img2 = ghoul_api.stylzie(img)
+    elif mode == 2:
+        img2 = mosaic_api.stylzie(img)
+    elif mode == 3:
+        img2 = Posterization_transfer(img)
 
     pre_img = resize(img=img2, max_size=224)
 
@@ -139,6 +150,10 @@ def handle_message(event):
         image_converter(event.reply_token, 0)
     elif message == "東京喰種風":
         image_converter(event.reply_token, 1)
+    elif message == "ステンドグラス風":
+        image_converter(event.reply_token, 2)
+    elif message == "ポスター風":
+        image_converter(event.reply_token, 3)
     else:
         line_bot_api.reply_message(
             event.reply_token,
