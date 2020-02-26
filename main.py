@@ -8,12 +8,9 @@ from linebot import LineBotApi, WebhookHandler
 from linebot.exceptions import InvalidSignatureError
 from linebot.models import (
     MessageEvent, TextMessage, ImageMessage, TextSendMessage, ImageSendMessage, 
-    VideoSendMessage, StickerSendMessage, AudioSendMessage
+    VideoSendMessage, StickerSendMessage, AudioSendMessage, QuickReply, QuickReplyButton
 )
 from utils.image_processing import *
-from linebot.models import (
-    MessageEvent, TextMessage, TextSendMessage, 
-    TemplateSendMessage,ButtonsTemplate,URIAction 
 )
 
 app = Flask(__name__)
@@ -35,16 +32,17 @@ def save_image(message_id: str, save_path: str) -> None:
         for chunk in message_content.iter_content():
             f.write(chunk)
 
-def make_button_template():
-    message_template = TemplateSendMessage(
-        template=ButtonsTemplate(
-            title="選択してください",
-            text="どの変換にする？",
-            actions=[
-                PostbackAction(label='A', data='AAA'),
-                PostbackAction(label='B', data='BBB'),
-            ]
-        )
+def make_button():
+    message_template = TextSendMessage(
+            text='選択してください',
+            quick_reply=QuickReply(
+                items=[
+                    QuickReplyButton(
+                        action=MessageAction(label="A", text="text1")
+                    ),
+                    QuickReplyButton(
+                        action=MessageAction(label="B", text="text2")
+                    )
     )
     return message_template
 
@@ -105,11 +103,11 @@ def handle_image(event):
     app.logger.info(os.path.isfile(f"https://date-the-image.herokuapp.com/{preview_image_path}"))
 
     image_message = ImageSendMessage(
-        original_content_url=f"https://rinebot114514.herokuapp.com/{main_image_path}",
-        preview_image_url=f"https://rinebot114514.herokuapp.com/{preview_image_path}",
+        original_content_url=f"https://   /{main_image_path}",
+        preview_image_url=f"https://   /{preview_image_path}",
     )
 
-    line_bot_api.reply_message(event.reply_token, [make_button_template(), image_message])
+    line_bot_api.reply_message(event.reply_token, make_button())
 
     src_image_path.unlink()
 if __name__ == "__main__":
