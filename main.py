@@ -191,7 +191,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--hostname", type=str,
                         help="for example <heroku app name>.herokuapp.com")
-    parser,add_argument("--use-aws-s3",type=bool,default=True,
+    parser.add_argument("--use-aws-s3",type=bool,default=True,
                         help="Select whether to save the image to aws s3.")
     args = parser.parse_args()
 
