@@ -1,16 +1,18 @@
 # coding: UTF-8
 
 import os
+import sys
 import random
 import cv2
-
+import argparse
 from pathlib import Path
 from flask import Flask, request, abort
 from linebot import LineBotApi, WebhookHandler
 from linebot.exceptions import InvalidSignatureError
 from linebot.models import (
     MessageEvent, TextMessage, ImageMessage, TextSendMessage, ImageSendMessage, 
-    VideoSendMessage, StickerSendMessage, AudioSendMessage, QuickReply, QuickReplyButton, MessageAction
+    VideoSendMessage, StickerSendMessage, AudioSendMessage, QuickReply, QuickReplyButton, MessageAction,
+    ButtonsTemplate, TemplateSendMessage
 )
 from utils.image_processing import *
 
@@ -29,10 +31,11 @@ LINE_CHANNEL_SECRET = os.environ["LINE_CHANNEL_SECRET"]
 line_bot_api = LineBotApi(LINE_CHANNEL_ACCESS_TOKEN)
 handler = WebhookHandler(LINE_CHANNEL_SECRET)
 
-SRC_IMAGE_PATH = "static/images/{}.jpg"
-MAIN_IMAGE_PATH = "static/images/{}_main.jpg"
-PREVIEW_IMAGE_PATH = "static/images/{}_preview.jpg"
+SRC_IMAGE_PATH = "static/images/src/{}.jpg"
+MAIN_IMAGE_PATH = "static/images/{}/{}_main.jpg"
+PREVIEW_IMAGE_PATH = "static/images/{}/{}_preview.jpg"
 message_id = ""
+args = sys.argv
 
 def save_image(message_id, save_path):
     message_content = line_bot_api.get_message_content(message_id)
@@ -41,26 +44,36 @@ def save_image(message_id, save_path):
             f.write(chunk)
 
 def make_button():
-    message_template = TextSendMessage(
-            text='変換方法を選んでください',
-            quick_reply=QuickReply(
-                items=[
-                    QuickReplyButton(
-                        action=MessageAction(label="クロスハッチング", text="クロスハッチング")
-                    ),
-                    QuickReplyButton(
-                        action=MessageAction(label="東京喰種風", text="東京喰種風")
-                    ),
-                    QuickReplyButton(
-                        action=MessageAction(label="ステンドグラス風", text="ステンドグラス風")
-                    ),
-                    QuickReplyButton(
-                        action=MessageAction(label="ポスター風", text="ポスター風")
-                    ),
-                ]
-            )
-    )
-    return message_template
+    # message_template = TextSendMessage(
+    #         text='変換方法を選んでください',
+    #         quick_reply=QuickReply(
+    #             items=[
+    #                 QuickReplyButton(
+    #                     action=MessageAction(label="クロスハッチング", text="クロスハッチング")
+    #                 ),
+    #                 QuickReplyButton(
+    #                     action=MessageAction(label="東京喰種風", text="東京喰種風")
+    #                 ),
+    #                 QuickReplyButton(
+    #                     action=MessageAction(label="ステンドグラス風", text="ステンドグラス風")
+    #                 ),
+    #                 QuickReplyButton(
+    #                     action=MessageAction(label="ポスター風", text="ポスター風")
+    #                 ),
+    #             ]
+    #         )
+    # )
+    buttons = ButtonsTemplate(
+        title='画風変換',
+        text='画風を選択してください',
+        actions=[
+            MessageAction(label='クロスハッチング', text='クロスハッチング'),
+            MessageAction(label="東京喰種風", text="東京喰種風"),
+            MessageAction(label="ステンドグラス風", text="ステンドグラス風"),
+            MessageAction(label="ポスター風", text="ポスター風"),
+    ])
+    template_message = TemplateSendMessage(alt_text='ERROR', template=buttons)
+    return template_message
 
 def resize(img, max_size):
 
@@ -77,31 +90,31 @@ def resize(img, max_size):
     
     return img
 
-def image_converter(reply_token, mode=0):
+def image_converter(reply_token, mode):
     """
     0: cross_hatching
     1: tokyo_ghoul
+    2: mosaic
+    3: poster
     """
     global message_id
     src_image_path = Path(SRC_IMAGE_PATH.format(message_id)).absolute()
-    main_image_path = MAIN_IMAGE_PATH.format(message_id)
-    preview_image_path = PREVIEW_IMAGE_PATH.format(message_id)
+    main_image_path = MAIN_IMAGE_PATH.format(mode, message_id)
+    preview_image_path = PREVIEW_IMAGE_PATH.format(mode, message_id)
 
     img = cv2.imread(str(src_image_path))
 
-    print(img.shape)
     img = resize(img=img, max_size=1024)
-    print(img.shape)
 
-    if mode == 0:
+    if mode == 'cross_hatching':
         img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         hatching45_img, hatching135_img = hatching(img, LIY=30)
         img2 = BD(hatching45_img, hatching135_img)
-    elif mode == 1:
+    elif mode == 'tokyo_ghoul':
         img2 = ghoul_api.stylzie(img)
-    elif mode == 2:
+    elif mode == 'mosaic':
         img2 = mosaic_api.stylzie(img)
-    elif mode == 3:
+    elif mode == 'poster':
         img2 = Posterization_transfer(img)
 
     pre_img = resize(img=img2, max_size=224)
@@ -109,22 +122,24 @@ def image_converter(reply_token, mode=0):
     cv2.imwrite(str(main_image_path),img2)
     cv2.imwrite(str(preview_image_path),pre_img)
 
-    # image_message = ImageSendMessage(
-    #     original_content_url=f"https://ad8e83cc.ngrok.io/{main_image_path}",
-    #     preview_image_url=f"https://ad8e83cc.ngrok.io/{preview_image_path}",
-    # )
+    if args.use_aws_s3:
+        aws_save_image(str(main_image_path))
+        aws_save_image(str(preview_image_path))
 
-    aws_save_image(str(main_image_path))
-    aws_save_image(str(preview_image_path))
+        image_message = ImageSendMessage(
+            original_content_url=aws_get_url(str(main_image_path)),
+            preview_image_url=aws_get_url(str(preview_image_path)),
+        )
+    else:
+        image_message = ImageSendMessage(
+            original_content_url=f"{args.hostname}/{main_image_path}",
+            preview_image_url=f"{args.hostname}/{preview_image_path}",
+        )
+    
 
-    image_message = ImageSendMessage(
-        original_content_url=aws_get_url(str(main_image_path)),
-        preview_image_url=aws_get_url(str(preview_image_path)),
-    )
+    line_bot_api.reply_message(reply_token, [image_message, make_button()])
 
-    line_bot_api.reply_message(reply_token, image_message)
-
-    src_image_path.unlink()
+    # src_image_path.unlink()
 
 @app.route("/callback", methods=['POST'])
 def callback():
@@ -146,18 +161,21 @@ def callback():
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
     message = event.message.text
+    print(event.message.text)
     if message == "クロスハッチング":
-        image_converter(event.reply_token, 0)
+        image_converter(event.reply_token, 'cross_hatching')
     elif message == "東京喰種風":
-        image_converter(event.reply_token, 1)
+        image_converter(event.reply_token, 'tokyo_ghoul')
     elif message == "ステンドグラス風":
-        image_converter(event.reply_token, 2)
+        image_converter(event.reply_token, 'mosaic')
     elif message == "ポスター風":
-        image_converter(event.reply_token, 3)
+        image_converter(event.reply_token, 'poster')
     else:
         line_bot_api.reply_message(
             event.reply_token,
-            TextSendMessage(text=f"{message}の処理が出来ませんでした。")
+            [
+                TextSendMessage(text=f"{message}の処理が出来ませんでした。"),
+            ]
         )
 
 @handler.add(MessageEvent, message=ImageMessage)
@@ -170,6 +188,12 @@ def handle_image(event):
     line_bot_api.reply_message(event.reply_token, make_button())
 
 if __name__ == "__main__":
-#    app.run()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--hostname", type=str,
+                        help="for example <heroku app name>.herokuapp.com")
+    parser.add_argument("--use-aws-s3",type=bool,default=True,
+                        help="Select whether to save the image to aws s3.")
+    args = parser.parse_args()
+
     port = int(os.getenv("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
