@@ -71,6 +71,7 @@ def make_button():
             MessageAction(label="東京喰種風", text="東京喰種風"),
             MessageAction(label="ステンドグラス風", text="ステンドグラス風"),
             MessageAction(label="ポスター風", text="ポスター風"),
+            MessageAction(label="終了", text="終了"),
     ])
     template_message = TemplateSendMessage(alt_text='ERROR', template=buttons)
     return template_message
@@ -170,6 +171,8 @@ def handle_message(event):
         image_converter(event.reply_token, 'mosaic')
     elif message == "ポスター風":
         image_converter(event.reply_token, 'poster')
+    elif message == "終了":
+        line_bot_api.reply_message("終了しました")
     else:
         line_bot_api.reply_message(
             event.reply_token,
