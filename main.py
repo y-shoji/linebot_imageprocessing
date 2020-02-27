@@ -4,7 +4,7 @@ import os
 import sys
 import random
 import cv2
-
+import argparse
 from pathlib import Path
 from flask import Flask, request, abort
 from linebot import LineBotApi, WebhookHandler
@@ -111,12 +111,7 @@ def image_converter(reply_token, mode):
     cv2.imwrite(str(main_image_path),img2)
     cv2.imwrite(str(preview_image_path),pre_img)
 
-    if len(args) > 1:
-        image_message = ImageSendMessage(
-            original_content_url=f"{args[1]}/{main_image_path}",
-            preview_image_url=f"{args[1]}/{preview_image_path}",
-        )
-    else:
+    if args.use_aws_s3:
         aws_save_image(str(main_image_path))
         aws_save_image(str(preview_image_path))
 
@@ -124,6 +119,12 @@ def image_converter(reply_token, mode):
             original_content_url=aws_get_url(str(main_image_path)),
             preview_image_url=aws_get_url(str(preview_image_path)),
         )
+    else:
+        image_message = ImageSendMessage(
+            original_content_url=f"{args.hostname}/{main_image_path}",
+            preview_image_url=f"{args.hostname}/{preview_image_path}",
+        )
+    
 
     line_bot_api.reply_message(reply_token, [image_message, make_button()])
 
@@ -177,6 +178,12 @@ def handle_image(event):
     line_bot_api.reply_message(event.reply_token, make_button())
 
 if __name__ == "__main__":
-#    app.run()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--hostname", type=str,
+                        help="for example <heroku app name>.herokuapp.com")
+    parser,add_argument("--use-aws-s3",type=bool,default=True,
+                        help="Select whether to save the image to aws s3.")
+    args = parser.parse_args()
+
     port = int(os.getenv("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
