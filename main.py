@@ -170,6 +170,10 @@ def handle_message(event):
         image_converter(event.reply_token, 'mosaic')
     elif message == "ポスター風":
         image_converter(event.reply_token, 'poster')
+    elif message == "終了":
+        src_image_path = Path(SRC_IMAGE_PATH.format(message_id)).absolute()
+        src_image_path.unlink()
+        line_bot_api.reply_message(event.reply_token, TextSendMessage(text="正常に終了しました"))
     else:
         line_bot_api.reply_message(
             event.reply_token,
