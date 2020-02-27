@@ -11,7 +11,8 @@ from linebot import LineBotApi, WebhookHandler
 from linebot.exceptions import InvalidSignatureError
 from linebot.models import (
     MessageEvent, TextMessage, ImageMessage, TextSendMessage, ImageSendMessage, 
-    VideoSendMessage, StickerSendMessage, AudioSendMessage, QuickReply, QuickReplyButton, MessageAction
+    VideoSendMessage, StickerSendMessage, AudioSendMessage, QuickReply, QuickReplyButton, MessageAction,
+    ButtonsTemplate, TemplateSendMessage
 )
 from utils.image_processing import *
 
@@ -43,26 +44,36 @@ def save_image(message_id, save_path):
             f.write(chunk)
 
 def make_button():
-    message_template = TextSendMessage(
-            text='変換方法を選んでください',
-            quick_reply=QuickReply(
-                items=[
-                    QuickReplyButton(
-                        action=MessageAction(label="クロスハッチング", text="クロスハッチング")
-                    ),
-                    QuickReplyButton(
-                        action=MessageAction(label="東京喰種風", text="東京喰種風")
-                    ),
-                    QuickReplyButton(
-                        action=MessageAction(label="ステンドグラス風", text="ステンドグラス風")
-                    ),
-                    QuickReplyButton(
-                        action=MessageAction(label="ポスター風", text="ポスター風")
-                    ),
-                ]
-            )
-    )
-    return message_template
+    # message_template = TextSendMessage(
+    #         text='変換方法を選んでください',
+    #         quick_reply=QuickReply(
+    #             items=[
+    #                 QuickReplyButton(
+    #                     action=MessageAction(label="クロスハッチング", text="クロスハッチング")
+    #                 ),
+    #                 QuickReplyButton(
+    #                     action=MessageAction(label="東京喰種風", text="東京喰種風")
+    #                 ),
+    #                 QuickReplyButton(
+    #                     action=MessageAction(label="ステンドグラス風", text="ステンドグラス風")
+    #                 ),
+    #                 QuickReplyButton(
+    #                     action=MessageAction(label="ポスター風", text="ポスター風")
+    #                 ),
+    #             ]
+    #         )
+    # )
+    buttons = ButtonsTemplate(
+        title='画風変換',
+        text='画風を選択してください',
+        actions=[
+            MessageAction(label='クロスハッチング', text='クロスハッチング'),
+            MessageAction(label="東京喰種風", text="東京喰種風"),
+            MessageAction(label="ステンドグラス風", text="ステンドグラス風"),
+            MessageAction(label="ポスター風", text="ポスター風"),
+    ])
+    template_message = TemplateSendMessage(alt_text='ERROR', template=buttons)
+    return template_message
 
 def resize(img, max_size):
 
@@ -163,7 +174,6 @@ def handle_message(event):
             event.reply_token,
             [
                 TextSendMessage(text=f"{message}の処理が出来ませんでした。"),
-                make_button()
             ]
         )
 
